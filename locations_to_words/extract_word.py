@@ -1,9 +1,10 @@
 import requests
-import gensim.downloader
+import pickle
+import pprint
 
-discarded_words = ["yes", "common", "general", "commercial", "retail", "station", "rental", "place", "of", "centre",
-                   "venue", 'fast', "box", "paving", "stones"]
-glove_vectors = gensim.downloader.load("glove-wiki-gigaword-50")
+
+discarded_words = {"yes", "common", "general", "commercial", "retail", "station", "rental", "place", "of", "centre",
+                   "venue", 'fast', "box", "paving", "stones"}
 
 
 def set_usage_by_coords(latitude, longitude, radius=0.001):
@@ -42,47 +43,36 @@ def set_usage_by_coords(latitude, longitude, radius=0.001):
                union(landuse_set).union(shop_set).union(man_made_set).union(barrier_set), name_set
 
 
-def postprocess_words(set_of_words):
-    set_of_words.discard(None)
-    phrases = set({})
-    temp_set = set_of_words.copy()
-    for w in temp_set:
-        if 'mixed' in w:
-            set_of_words.remove(w)
-    for w in temp_set:
-        if '_' in w:
-            set_of_words.remove(w)
-            phrases.add(w.replace('_', ' '))
-    temp_set = set_of_words.copy()
-    for w in temp_set:
-        if ' ' in w:
-            set_of_words.remove(w)
-            phrases.add(w)
-    temp_set = set_of_words.copy()
-    for w in temp_set:
-        if '-' in w:
-            set_of_words.remove(w)
-            phrases.add(w)
+def postprocess_words(list_of_words):
+    if None in list_of_words:
+        list_of_words.remove(None)
+    list_of_words = [w.replace('_', ' ') if '_' in w else w for w in list_of_words]
+    list_of_words = [w.replace('-', ' ') if '_' in w else w for w in list_of_words]
     for w in discarded_words:
-        set_of_words.discard(w)
-    return set_of_words, phrases
+        if w in list_of_words:
+            list_of_words.remove(w)
+    return list_of_words
 
 
-def generate_similar_words(target_word):
-    sims = set([p[0] for p in glove_vectors.most_similar(target_word, topn=1)])
-    return sims.union(set(target_word))
-
-
-def conclude_words(latitude, longitude, radius=0.0005):
+def conclude_words(latitude, longitude, radius=0.001):
     # Query limit is 2, so at maximum try one more time for each user
     query_words, name_words = set_usage_by_coords(latitude, longitude, radius=radius)
-    if len(query_words) <= 3:
+    if len(query_words) <= 5:
         query_words, name_words = set_usage_by_coords(latitude, longitude, radius=radius * 2)
-    elif len(query_words) >= 10:
+    elif len(query_words) >= 20:
         query_words, name_words = set_usage_by_coords(latitude, longitude, radius=radius / 4)
-    processed_words, phrases = postprocess_words(query_words)
-    all_words = generate_similar_words(processed_words).union(name_words).union(phrases)
-    return all_words
+    with open('Cambridge_words.pkl', 'rb') as f:
+        sample_dict = pickle.load(f)
+    dict_words = {}
+    for w in query_words:
+        if w in sample_dict:
+            dict_words[w] = sample_dict[w]
+        else:
+            dict_words[w] = 1
+    dict_words = {k: v for k, v in sorted(dict_words.items(), key=lambda item: item[1])}
+    all_words = list(dict_words.keys())
+    all_words = postprocess_words(all_words)
+    return all_words, name_words
 
 
-print(conclude_words(22.15186612658251, 113.56672739616229, radius=0.0005))
+pprint.pprint(conclude_words(52.20514186584956, 0.12024520079881111, radius=0.001))
