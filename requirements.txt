@@ -1,0 +1,6 @@
+django
+gunicorn
+django-heroku
+flask
+what3words
+gensim
