@@ -61,7 +61,7 @@ def conclude_words(latitude, longitude, radius=0.001):
         query_words, name_words = set_usage_by_coords(latitude, longitude, radius=radius * 2)
     elif len(query_words) >= 20:
         query_words, name_words = set_usage_by_coords(latitude, longitude, radius=radius / 4)
-    with open('Cambridge_words.pkl', 'rb') as f:
+    with open('London_words.pkl', 'rb') as f:
         sample_dict = pickle.load(f)
     dict_words = {}
     for w in query_words:
@@ -73,6 +73,3 @@ def conclude_words(latitude, longitude, radius=0.001):
     all_words = list(dict_words.keys())
     all_words = postprocess_words(all_words)
     return all_words, name_words
-
-
-pprint.pprint(conclude_words(52.20514186584956, 0.12024520079881111, radius=0.001))
