@@ -16,18 +16,14 @@ import csv
 import argparse
 import numpy as np
 from sys import exit
+import sample
 
-# if in Google Colaboratory
-try:
-    from google.colab import drive
-except:
-    pass
-
-from gpt_2_simple.src import model, sample, encoder, memory_saving_gradients
+from gpt_2_simple.src import model, encoder, memory_saving_gradients
 from gpt_2_simple.src.load_dataset import load_dataset, Sampler
 from gpt_2_simple.src.accumulate import AccumulatingOptimizer
 
 tf.compat.v1.disable_eager_execution()
+
 
 def download_file_with_progress(url_base, sub_dir, model_name, file_name):
     """General utility for incrementally downloading files from the internet
@@ -119,9 +115,11 @@ def reset_session(sess, threads=-1, server=None):
     sess = start_tf_sess(threads, server)
     return sess
 
+
 def get_available_gpus():
     local_device_protos = device_lib.list_local_devices()
     return [x.name for x in local_device_protos if x.device_type == 'GPU']
+
 
 def finetune(sess,
              dataset,
@@ -173,7 +171,7 @@ def finetune(sess,
                             os.path.join(checkpoint_path, file))
         except FileNotFoundError as fnf_error:
             print("You need to download the GPT-2 model first via download_gpt2()")
-            raise(fnf_error)
+            raise (fnf_error)
 
     enc = encoder.get_encoder(checkpoint_path)
     hparams = model.default_hparams()
@@ -201,7 +199,7 @@ def finetune(sess,
         input_tensor=tf.nn.sparse_softmax_cross_entropy_with_logits(
             labels=context[:, 1:], logits=output['logits'][:, :-1]))
 
-    tf_sample,target_probabilities = sample.sample_sequence(
+    tf_sample, target_probabilities = sample.sample_sequence(
         hparams=hparams,
         length=sample_length,
         context=context,
@@ -280,13 +278,13 @@ def finetune(sess,
         print(
             'Saving',
             os.path.join(checkpoint_path,
-                         'model-{}').format(counter-1))
+                         'model-{}').format(counter - 1))
         saver.save(
             sess,
             os.path.join(checkpoint_path, 'model'),
-            global_step=counter-1)
+            global_step=counter - 1)
         with open(counter_path, 'w') as fp:
-            fp.write(str(counter-1) + '\n')
+            fp.write(str(counter - 1) + '\n')
 
     def generate_samples():
         context_tokens = data_sampler.sample(1)
@@ -303,8 +301,7 @@ def finetune(sess,
                     index + 1, text)
                 all_text.append(text)
                 index += 1
-        #print(prob,"probabilites")
-        #print(text)
+
         maketree(os.path.join(SAMPLE_DIR, run_name))
         with open(
                 os.path.join(SAMPLE_DIR, run_name,
@@ -355,7 +352,7 @@ def finetune(sess,
 
                 print(
                     '[{counter} | {time:2.2f}] loss={loss:2.2f} avg={avg:2.2f}'
-                    .format(
+                        .format(
                         counter=counter,
                         time=time.time() - start_time,
                         loss=v_loss,
@@ -396,10 +393,10 @@ def load_gpt2(sess,
 
     output = model.model(hparams=hparams, X=context, gpus=gpus, reuse=reuse)
 
-    if checkpoint=='latest':
+    if checkpoint == 'latest':
         ckpt = tf.train.latest_checkpoint(checkpoint_path)
     else:
-        ckpt = os.path.join(checkpoint_path,checkpoint)
+        ckpt = os.path.join(checkpoint_path, checkpoint)
 
     saver = tf.compat.v1.train.Saver(allow_empty=True)
     sess.run(tf.compat.v1.global_variables_initializer())
@@ -410,14 +407,6 @@ def load_gpt2(sess,
         print('Loading checkpoint', ckpt)
     saver.restore(sess, ckpt)
 
-def getMaxIndex(probs):
-    maximum = np.NINF
-    index = -1
-    for i in range(len(probs)):
-        if (probs[i]>maximum):
-            maximum = probs[i]
-            index = i
-    return index
 
 
 def generate(sess,
@@ -439,12 +428,17 @@ def generate(sess,
              top_k=0,
              top_p=0.0,
              include_prefix=True,
-             target = "the"):
+             target=None):
     """Generates text from a model loaded into memory.
 
     Adapted from https://github.com/openai/gpt-2/blob/master/src/interactive_conditional_samples.py
     """
 
+    truncating = not (target is None)
+    if not truncating:
+        #sample.sample_sequence() requires a target word so just use the even if its not needed because we are not
+        #truncating this sentence
+        target = "the"
     if batch_size is None:
         batch_size = 1
     assert nsamples % batch_size == 0
@@ -473,37 +467,42 @@ def generate(sess,
     tf.compat.v1.set_random_seed(seed)
     encoded_target = enc.encode(target)
     target = tf.constant(encoded_target[0])
-    output,prob = sample.sample_sequence(
-        target = target,
+    combined = sample.sample_sequence(
+        target=target,
         hparams=hparams,
         length=min(length, 1023 - (len(context_tokens) if prefix else 0)),
         start_token=enc.encoder['<|endoftext|>'] if not prefix else None,
         context=context if prefix else None,
         batch_size=batch_size,
         temperature=temperature, top_k=top_k, top_p=top_p
-    )#[:, 1:]
-    output = output[:,1:]#discard the first token (=start of text token)
-    prob = sess.run(prob)
-    #print(prob)
-    index = getMaxIndex(prob) -1#decrement index to account for removed token
-    #print(getMaxIndex(prob),prob[getMaxIndex(prob)])
-    #print(enc.encode("the"),"the")
+    )
     if destination_path:
         f = open(destination_path, 'w')
     generated = 0
     gen_texts = []
     while generated < nsamples:
         if not prefix:
-            out = sess.run(output)
+            out = sess.run(combined)
         else:
-            out = sess.run(output, feed_dict={
-                    context: batch_size * [context_tokens]
-                })
+            out = sess.run(combined, feed_dict={
+                context: batch_size * [context_tokens]
+            })
+        #unpackage probabilities and the token sequence generated
+        tokens = out[0]
+        if truncating:
+            prob = out[1]
+            prob = prob[0]  # remove inner nesting
+            index = np.argmax(prob)
+            print(index, "index")
+            tokens = [tokens[0][:index]]  # enc.decode() requires a nested list
+            # print(tokens,"post")
+        tokens = [tokens[0][1:] ]# either get a duplicate word or endoftext marker as first token so remove
+
         for i in range(batch_size):
             generated += 1
-            gen_text = enc.decode(out[i])
+            gen_text = enc.decode(tokens[i])
             if prefix:
-                gen_text = enc.decode(context_tokens[:1]) + gen_text
+               gen_text = enc.decode(context_tokens[:1]) + gen_text
             if truncate:
                 truncate_esc = re.escape(truncate)
                 if prefix and not include_prefix:
@@ -527,7 +526,7 @@ def generate(sess,
         f.close()
 
     if return_as_list:
-        return gen_texts,index
+        return gen_texts
 
 
 def generate_to_file(sess,
@@ -572,13 +571,6 @@ def generate_to_file(sess,
              top_k=top_k,
              top_p=top_p,
              include_prefix=include_prefix)
-
-
-def mount_gdrive():
-    """Mounts the user's Google Drive in Colaboratory."""
-    assert 'google.colab' in sys.modules, "You must be in Colaboratory to mount your Google Drive"
-
-    drive.mount('/content/drive')
 
 
 def is_mounted():
@@ -698,80 +690,80 @@ def cmd():
     parser.add_argument(
         '--mode', help='Mode for using the CLI (either "finetune" or "generate") [Required]', nargs='?')
     parser.add_argument(
-        '--run_name',  help="[finetune/generate] Run number to save/load the model",
+        '--run_name', help="[finetune/generate] Run number to save/load the model",
         nargs='?', default='run1')
     parser.add_argument(
         '--checkpoint_dir', help="[finetune] Path of the checkpoint directory",
         nargs='?', default='checkpoint')
     parser.add_argument(
-        '--model_name',  help="[finetune] Name of the GPT-2 model to finetune",
+        '--model_name', help="[finetune] Name of the GPT-2 model to finetune",
         nargs='?', default='124M')
     parser.add_argument(
         '--model_dir', help="[finetune] Path of directory of the GPT-2 model to finetune",
         nargs='?', default='models')
     parser.add_argument(
-        '--dataset',  help="[finetune] Path to the source text.",
+        '--dataset', help="[finetune] Path to the source text.",
         nargs='?', default=None)
     parser.add_argument(
-        '--steps',  help="[finetune] Number of steps to train (-1 for infinite)",
+        '--steps', help="[finetune] Number of steps to train (-1 for infinite)",
         nargs='?', default=-1)
     parser.add_argument(
-        '--restore_from',  help="[finetune] Whether to load model 'fresh' or from 'latest' checkpoint.",
+        '--restore_from', help="[finetune] Whether to load model 'fresh' or from 'latest' checkpoint.",
         nargs='?', default='latest')
     parser.add_argument(
-        '--sample_every',  help="[finetune] After how many steps to print sample",
+        '--sample_every', help="[finetune] After how many steps to print sample",
         nargs='?', default=1000000, type=int)
     parser.add_argument(
-        '--save_every',  help="[finetune] After how many steps to save checkpoint",
+        '--save_every', help="[finetune] After how many steps to save checkpoint",
         nargs='?', default=100, type=int)
     parser.add_argument(
-        '--print_every',  help="[finetune] After how many steps to print progress",
+        '--print_every', help="[finetune] After how many steps to print progress",
         nargs='?', default=10, type=int)
     parser.add_argument(
-        '--optimizer',  help="[finetune] Optimizer to use for finetuning (adam or sgd)",
+        '--optimizer', help="[finetune] Optimizer to use for finetuning (adam or sgd)",
         nargs='?', default='adam')
     parser.add_argument(
-        '--overwrite',  help="[finetune] Overwrite existing model when continuing training",
+        '--overwrite', help="[finetune] Overwrite existing model when continuing training",
         nargs='?', default=False, type=lambda x: (str(x).lower() == 'true'))
     parser.add_argument(
-        '--nfiles',  help="[generate] How many files to generate.",
+        '--nfiles', help="[generate] How many files to generate.",
         nargs='?', default=1, type=int)
     parser.add_argument(
-        '--nsamples',  help="[generate] How many texts to generate.",
+        '--nsamples', help="[generate] How many texts to generate.",
         nargs='?', default=1, type=int)
     parser.add_argument(
-        '--folder',  help="[generate] Folder to save the generated files",
+        '--folder', help="[generate] Folder to save the generated files",
         nargs='?', default="gen", type=str)
     parser.add_argument(
-        '--length',  help="[generate] Length (tokens) of the generated texts",
+        '--length', help="[generate] Length (tokens) of the generated texts",
         nargs='?', default=1023, type=int)
     parser.add_argument(
-        '--temperature',  help="[generate] Temperature of the generated texts",
+        '--temperature', help="[generate] Temperature of the generated texts",
         nargs='?', default=0.7, type=float)
     parser.add_argument(
-        '--top_k',  help="[generate] Sample only from top k tokens",
+        '--top_k', help="[generate] Sample only from top k tokens",
         nargs='?', default=0, type=int)
     parser.add_argument(
-        '--top_p',  help="[generate] Sample from top p prob (overrides top_k if nonzero)",
+        '--top_p', help="[generate] Sample from top p prob (overrides top_k if nonzero)",
         nargs='?', default=0.0, type=float)
     parser.add_argument(
-        '--batch_size',  help="[generate] Batch size for generation (increase for GPUs)",
+        '--batch_size', help="[generate] Batch size for generation (increase for GPUs)",
         nargs='?', default=1, type=int)
     parser.add_argument(
-        '--prefix',  help="[generate] Prefix for generated texts",
+        '--prefix', help="[generate] Prefix for generated texts",
         nargs='?', default=None)
     parser.add_argument(
-        '--truncate',  help="[generate] Truncation for generated texts",
+        '--truncate', help="[generate] Truncation for generated texts",
         nargs='?', default=None)
     # https://stackoverflow.com/a/46951029
     parser.add_argument(
-        '--include_prefix',  help="[generate] Include prefix when truncating.",
+        '--include_prefix', help="[generate] Include prefix when truncating.",
         nargs='?', default=True, type=lambda x: (str(x).lower() == 'true'))
     parser.add_argument(
-        '--sample_delim',  help="[generate] Delimiter between each generated sample.",
+        '--sample_delim', help="[generate] Delimiter between each generated sample.",
         nargs='?', default='=' * 20 + '\n', type=str)
     parser.add_argument(
-        '--multi_gpu',  help="[generate/finetune] Attempt to allocate multiple GPUs for running.",
+        '--multi_gpu', help="[generate/finetune] Attempt to allocate multiple GPUs for running.",
         nargs='?', default=True, type=lambda x: (str(x).lower() == 'true'))
 
     # Positional arguments
@@ -849,7 +841,7 @@ def cmd_generate(nfiles, nsamples, folder,
 
     for _ in trange(nfiles):
         gen_file = os.path.join(folder,
-                    'gpt2_gentext_{:%Y%m%d_%H%M%S}.txt'.format(datetime.utcnow()))
+                                'gpt2_gentext_{:%Y%m%d_%H%M%S}.txt'.format(datetime.utcnow()))
 
         generate_to_file(sess,
                          run_name=run_name,
