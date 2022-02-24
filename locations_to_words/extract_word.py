@@ -1,10 +1,10 @@
 import requests
 import pickle
-import pprint
 
 
 discarded_words = {"yes", "common", "general", "commercial", "retail", "station", "rental", "place", "of", "centre",
                    "venue", 'fast', "box", "paving", "stones"}
+word_file = "London_words.pkl"
 
 
 def set_usage_by_coords(latitude, longitude, radius=0.001):
@@ -48,6 +48,7 @@ def postprocess_words(list_of_words):
         list_of_words.remove(None)
     list_of_words = [w.replace('_', ' ') if '_' in w else w for w in list_of_words]
     list_of_words = [w.replace('-', ' ') if '_' in w else w for w in list_of_words]
+    list_of_words = [w.split()[0] if ' ' in w else w for w in list_of_words]
     for w in discarded_words:
         if w in list_of_words:
             list_of_words.remove(w)
@@ -56,12 +57,10 @@ def postprocess_words(list_of_words):
 
 def conclude_words(latitude, longitude, radius=0.001):
     # Query limit is 2, so at maximum try one more time for each user
-    query_words, name_words = set_usage_by_coords(latitude, longitude, radius=radius)
-    if len(query_words) <= 5:
-        query_words, name_words = set_usage_by_coords(latitude, longitude, radius=radius * 2)
-    elif len(query_words) >= 20:
-        query_words, name_words = set_usage_by_coords(latitude, longitude, radius=radius / 4)
-    with open('London_words.pkl', 'rb') as f:
+    query_words, _ = set_usage_by_coords(latitude, longitude, radius=radius)
+    if len(query_words) < 3:
+        query_words, _ = set_usage_by_coords(latitude, longitude, radius=radius * 2)
+    with open(word_file, 'rb') as f:
         sample_dict = pickle.load(f)
     dict_words = {}
     for w in query_words:
@@ -71,5 +70,5 @@ def conclude_words(latitude, longitude, radius=0.001):
             dict_words[w] = 1
     dict_words = {k: v for k, v in sorted(dict_words.items(), key=lambda item: item[1])}
     all_words = list(dict_words.keys())
-    all_words = postprocess_words(all_words)
-    return all_words, name_words
+    all_words = postprocess_words(all_words)[0:3]
+    return all_words
