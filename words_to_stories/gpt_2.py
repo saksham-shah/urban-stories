@@ -494,7 +494,8 @@ def generate(sess,
             prob = prob[0]  # remove inner nesting
             index = np.argmax(prob)
             print(index, "index")
-            tokens = [tokens[0][:index]]  # enc.decode() requires a nested list
+            # Index is the position after which the target should be added, so use index+1
+            tokens = [tokens[0][:index+1]]  # enc.decode() requires a nested list
             # print(tokens,"post")
         tokens = [tokens[0][1:] ]# either get a duplicate word or endoftext marker as first token so remove
 

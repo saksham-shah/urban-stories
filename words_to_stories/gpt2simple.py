@@ -30,7 +30,7 @@ def generate_from_prob(sess,prompt,targets):
         prompt = story[0]
     print(prompt)
 
-generate_from_prob(sess, "Once upon a time", ["key", "shoe", "jewellery"])
+generate_from_prob(sess, "Once upon a time, ", ["key", "shoe", "jewellery"])
 
 #TODO
 #We still need to create a endStory function that will take the prompt and continue generating until we get a fullstop
