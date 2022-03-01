@@ -1,6 +1,8 @@
+import gpt_2 as gpt2
+
 # Use GPT2 to generate text with a prefix
 # Temperature, top_p etc has been set according to a tutorial that recommended those values
-def generate(sess, prefix, length=20, target=None):
+def generate(sess, prefix, length=20, target=None, model_name="124M"):
     generated = gpt2.generate(sess,
                 model_name=model_name,
                 prefix=prefix,
@@ -11,8 +13,8 @@ def generate(sess, prefix, length=20, target=None):
                 target=target
                 )[0]
 
-    if (target is not None):
-        generated += ' ' + word
+    if target is not None:
+        generated += ' ' + target
     
     return generated
 
@@ -28,6 +30,8 @@ def sanitise(sentence):
         if charIsValid(char):
             output += char
         elif char == '\n' and output[-1] != ' ':
+            if (output[-1] not in ".!"):
+                output += '.'
             output += ' '
         elif char == ' ' and output[-1] != ' ':
             output += ' '
@@ -35,11 +39,11 @@ def sanitise(sentence):
     return output
 
 # Generates sanitised text
-def generateSanitised(sess, prefix, length=20, target=None):
+def generateSanitised(sess, prefix, length=20, target=None, model_name="124M"):
     attempts = 0
     # Repeatedly generate text until you get one that is valid
     while (attempts < 5):
-        output = generate(sess, prefix, length=length, target=target)
+        output = generate(sess, prefix, length=length, target=target, model_name=model_name)
         output = sanitise(output)
         if output is not None:
             return output
@@ -48,7 +52,7 @@ def generateSanitised(sess, prefix, length=20, target=None):
     return None
 
 # Generates text up to the first full stop
-def generateEnd(sess, prefix, length=20):
+def generateEnd(sess, prefix, length=20, model_name="124M"):
     # Truncates a sentence up to the first full stop (if there is one)
     def truncateByFullStop(sentence):
         index = sentence.find('.')
@@ -59,9 +63,9 @@ def generateEnd(sess, prefix, length=20):
     # Repeatedly generate text until you get one with a full stop
     attempts = 0
     while (attempts < 5):
-        output = generateValidated(sess, prefix, length=length + 10*attempts, target=target)
+        output = generateValidated(sess, prefix, length=length + 10*attempts, model_name=model_name)
         output = truncateByFullStop(output)
-        if output is not None
+        if output is not None:
             return output
         attempts += 1
     
