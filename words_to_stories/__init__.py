@@ -10,8 +10,19 @@ def load_model():
     return create_stories.load_model()
 
 def convert(wordtriple):
+    # TODO: @Tom load_model takes a while to run but only needs to be run once when the server starts
+    #       Can you move this code to wherever the server boots up, and store sess (the TenserFlow session) somewhere
+    #       Then we can change this function to also take sess as a parameter which is passed to generate_story
     sess = load_model()
-    sentence = create_stories.generateWithKeywords(sess, "Once upon a time, ", wordtriple)
+
+    # TODO: Figure out a better way to force GPT2 to create stories
+    #       Maybe have a list of story openers and pick one at random
+    #       Could maybe get a database of short stories from somewhere
+    #       and use the opening few words from them
+    prefix = "Here is a short story:\n\n"
+    prompt = "Once upon a time,"
+
+    sentence = create_stories.generate_story(sess, prompt=prompt, targets=wordtriple, prefix=prefix)
     print(str(sentence))
 
     return sentence

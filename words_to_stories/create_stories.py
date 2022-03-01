@@ -4,9 +4,10 @@ import gpt2_utilities as util
 # Set model to use: 124M, 335M or 774M
 model_name = "124M"
 
-# Download the model - should only need to run this once
-# Saves the model in a 'models' folder
-# gpt2.download_gpt2(model_name=model_name)
+def download_model(model_name="124M"):
+    # Download the model - should only need to run this once
+    # Saves the model in a 'models' folder
+    gpt2.download_gpt2(model_name=model_name)
 
 def load_model(model_name="124M"):
     # Load the model to be used
@@ -30,20 +31,8 @@ def generate_with_targets(sess, prompt, targets):
             return None
 
     story = util.generateEnd(sess, prefix=story, length=20, model_name=model_name)
-    print(story)
+    # print(story)
     return story
-
-# Generate a story based on 
-# def generate_story(sess, prompt, targets, prefix=None):
-#     if prefix is not None:
-#         prompt = prefix + prompt
-
-#     story = generate_with_targets(sess, prompt, targets)
-
-#     if prefix is not None:
-#         story = story[len(prefix):]
-    
-#     return story
 
 # Generate a story based on target words
 # Wraps the function above by constantly trying to generate a story
