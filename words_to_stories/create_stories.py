@@ -14,15 +14,63 @@ def load_model(model_name="124M"):
     gpt2.load_gpt2(sess, model_name=model_name)
     return sess
 
+# Generate a story based on target words
+# If anything goes wrong, it returns None
 def generate_with_targets(sess, prompt, targets):
+    story = prompt
     for word in targets:
-        print("before searching for " + word + ": " + prompt)
-        prompt = util.generateSanitised(sess, prefix=prompt, length=20, target=word)
+        print("before searching for " + word + ": " + story)
+        story = util.generateSanitised(sess, prefix=story, length=20, target=word, model_name=model_name)
+        if story is None:
+            return None
         
-        print("after searching for " + word + ": " + prompt)
-        prompt = util.generateSanitised(sess, prefix=prompt, length=20)
-    print(prompt)
+        print("after searching for " + word + ": " + story)
+        story = util.generateSanitised(sess, prefix=story, length=20, model_name=model_name)
+        if story is None:
+            return None
+
+    story = util.generateEnd(sess, prefix=story, length=20, model_name=model_name)
+    print(story)
+    return story
+
+# Generate a story based on 
+# def generate_story(sess, prompt, targets, prefix=None):
+#     if prefix is not None:
+#         prompt = prefix + prompt
+
+#     story = generate_with_targets(sess, prompt, targets)
+
+#     if prefix is not None:
+#         story = story[len(prefix):]
+    
+#     return story
+
+# Generate a story based on target words
+# Wraps the function above by constantly trying to generate a story
+# until one is successfully created
+def generate_story(sess, prompt, targets, prefix=None):
+    # Prompt is the start of the story
+    #       e.g. "Once upon a time,"
+    # Prefix is an extra prompt that isn't part of the story
+    # But it can be used to push GPT2 to writing a story
+    #       e.g. "Here is a short story:\n\n"
+
+    # Join the prefix and prompt
+    if prefix is not None:
+        prompt = prefix + prompt
+
+    # Keep generating stories until success
+    story = None
+    while story is None:
+        story = generate_with_targets(sess, prompt, targets)
+
+    # Remove the prefix from the generated story
+    if prefix is not None:
+        story = story[len(prefix):]
+    
+    return story
 
 sess = load_model(model_name="124M")
 
-generate_with_targets(sess, "Once upon a time, ", ["key", "shoe", "jewellery"])
+story = generate_story(sess, prompt="Once upon a time,", targets=["church", "train", "phone"], prefix="Here is a short story for young children:\n\n")
+print(story)
