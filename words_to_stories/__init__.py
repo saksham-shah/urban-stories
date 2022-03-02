@@ -9,7 +9,7 @@ def load_model():
     print("Loading GPT2 model")
     return create_stories.load_model()
 
-def convert(wordtriple):
+def convert(targets):
     # TODO: @Tom load_model takes a while to run but only needs to be run once when the server starts
     #       Can you move this code to wherever the server boots up, and store sess (the TenserFlow session) somewhere
     #       Then we can change this function to also take sess as a parameter which is passed to generate_story
@@ -22,7 +22,7 @@ def convert(wordtriple):
     prefix = "Here is a short story:\n\n"
     prompt = "Once upon a time,"
 
-    sentence = create_stories.generate_story(sess, prompt=prompt, targets=wordtriple, prefix=prefix)
+    sentence = create_stories.generate_story(sess, prompt=prompt, targets=targets, prefix=prefix)
     print(str(sentence))
 
     return sentence
