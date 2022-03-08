@@ -17,7 +17,7 @@ import argparse
 import numpy as np
 from sys import exit
 
-from . import sample
+import sample
 
 from gpt_2_simple.src import model, encoder, memory_saving_gradients
 from gpt_2_simple.src.load_dataset import load_dataset, Sampler

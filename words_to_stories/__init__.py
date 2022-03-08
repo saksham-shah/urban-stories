@@ -1,4 +1,4 @@
-from . import create_stories
+import create_stories
 from os import path
 
 def load_model():

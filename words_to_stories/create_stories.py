@@ -1,5 +1,5 @@
-from . import gpt_2 as gpt2
-from . import gpt2_utilities as util
+import gpt_2 as gpt2
+import gpt2_utilities as util
 
 # Set model to use: 124M, 335M or 774M
 model_name = "124M"
@@ -77,6 +77,6 @@ def generate_story(sess, prompt, targets, prefix=None):
 
 sess = load_model(model_name="124M")
 """""
-story = generate_story(sess, prompt="Once upon a time,", targets=["post office", "William Gates Building", "cinema", "jewellery", "computer", "groceries", "park", "school", "academia"], prefix="Here is a short story for young children:\n\n")
+story = generate_story(sess, prompt="Once upon a time,", targets=["Eiffel", "arch", "croissant"], prefix="Here is a short story for young children:\n\n")
 print(story)
 """""

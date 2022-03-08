@@ -1,4 +1,4 @@
-from . import gpt_2 as gpt2
+import gpt_2 as gpt2
 
 # Use GPT2 to generate text with a prefix
 # Temperature, top_p etc has been set according to a tutorial that recommended those values
