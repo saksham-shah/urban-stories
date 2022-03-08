@@ -15,8 +15,14 @@ def handle_request():
         lon = float(lon)
     except:
         raise Exception("lat="+str(lat)+" "+"lon="+str(lon)+" failed to parse lat and lon to floats")
-    threewords = locations_to_words.w3w_convert(lat, lon)
-    sentence = words_to_stories.convert(threewords)
+    if id == None:
+        threewords = locations_to_words.similar_word_convert(lat, lon) + locations_to_words.w3w_convert(lat, lon)
+        #sentence = words_to_stories.convert(threewords)
+        return "The words to convert are "+str(threewords)+"."
+    else:
+        threewords = locations_to_words.w3w_convert(lat, lon)
+        sentence = words_to_stories.convert(threewords)
+        return sentence
     return sentence
 
 
