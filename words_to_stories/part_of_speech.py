@@ -1,4 +1,4 @@
-import gpt_2_simple as gpt2
+from . import gpt_2_simple as gpt2
 import requests
 import random
 

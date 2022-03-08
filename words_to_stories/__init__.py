@@ -1,5 +1,6 @@
-import create_stories
+from . import create_stories
 from os import path
+
 
 def load_model():
     if not path.exists("models"):
@@ -9,7 +10,8 @@ def load_model():
     print("Loading GPT2 model")
     return create_stories.load_model()
 
-def convert(targets):
+
+def convert(targets, prompt = "Once upon a time,"):
     # TODO: @Tom load_model takes a while to run but only needs to be run once when the server starts
     #       Can you move this code to wherever the server boots up, and store sess (the TenserFlow session) somewhere
     #       Then we can change this function to also take sess as a parameter which is passed to generate_story
@@ -20,7 +22,6 @@ def convert(targets):
     #       Could maybe get a database of short stories from somewhere
     #       and use the opening few words from them
     prefix = "Here is a short story:\n\n"
-    prompt = "Once upon a time,"
 
     sentence = create_stories.generate_story(sess, prompt=prompt, targets=targets, prefix=prefix)
     print(str(sentence))
