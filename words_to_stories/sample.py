@@ -1,3 +1,5 @@
+""" adapted from https://github.com/minimaxir/gpt-2-simple/blob/master/gpt_2_simple/src/sample.py"""
+
 import numpy as np
 import tensorflow as tf
 import sys
@@ -44,7 +46,9 @@ def top_p_logits(logits, p):
 def sample_sequence(target, *, hparams, length, start_token=None,
                     batch_size=None, context=None, temperature=1,
                     top_k=0, top_p=0.0):
-
+    """ Returns a tensor flow graph that contains the tokens of the generated text and (we added) also the
+    probability of the target word being selected for each token in the output.
+    This function contains the changes we made for our project."""
     if start_token is None:
         assert context is not None, 'Specify exactly one of start_token and context!'
     else:

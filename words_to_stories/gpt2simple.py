@@ -1,3 +1,5 @@
+""" used to test the word insertion but not actually used in final app."""
+
 import gpt_2 as gpt2
 
 # Set model to use: 124M, 335M or 774M
@@ -32,7 +34,3 @@ def generate_from_prob(sess,prompt,targets):
 
 generate_from_prob(sess, "Once upon a time, ", ["key", "shoe", "jewellery"])
 
-#TODO
-#We still need to create a endStory function that will take the prompt and continue generating until we get a fullstop
-#We still need to create a function/adapt generate_from_prob to only return the newly generated text so we don't get to
-#the point where we are constantly sending the whole story back and forth

@@ -1,3 +1,6 @@
+""" adapted from https://github.com/minimaxir/gpt-2-simple/blob/master/gpt_2_simple/gpt_2.py"""
+
+
 import tarfile
 import os
 import json
@@ -430,13 +433,13 @@ def generate(sess,
              include_prefix=True,
              target=None):
     """Generates text from a model loaded into memory.
-
-    Adapted from https://github.com/openai/gpt-2/blob/master/src/interactive_conditional_samples.py
-    """
+    (we added) If a target word is given as input the generated text will contain the target word
+    This fucntion contains the changes we made for our project.
+     """
 
     truncating = not (target is None)
     if not truncating:
-        #sample.sample_sequence() requires a target word so just use the even if its not needed because we are not
+        #sample.sample_sequence() requires a target word so just use "the" even if its not needed because we are not
         #truncating this sentence
         target = "the"
     if batch_size is None:
