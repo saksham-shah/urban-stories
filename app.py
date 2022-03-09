@@ -19,8 +19,8 @@ def handle_request():
         raise Exception("lat="+str(lat)+" "+"lon="+str(lon)+" failed to parse lat and lon to floats")
     if id == None:
         threewords = locations_to_words.similar_word_convert(lat, lon) + locations_to_words.w3w_convert(lat, lon)
-        #sentence = words_to_stories.convert(threewords)
-        return "The words to convert are "+str(threewords)+"."
+        sentence = words_to_stories.convert(threewords)
+        return sentence
     else:
         fileloc = "saved_stories/"+str(id)+".txt"
         if os.path.exists(fileloc):
