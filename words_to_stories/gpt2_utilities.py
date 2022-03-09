@@ -29,8 +29,6 @@ def generate(sess, prefix, length=20, target=None, model_name="124M"):
 # If return_none is False, instead of returning None it just removes invalid characters
 def sanitise(sentence, return_none=True):
     # Returns True if the character is valid
-    # TODO: Should we allow speech marks or not?
-    #       They mess with ending a sentence on a full stop so I haven't for now.
     valid_chars = ".,!-':;"
     def char_is_valid(char):
         return (char >= 'a' and char <= 'z') or (char >= 'A' and char <= 'Z') or (char >= '0' and char <= '9') or char in valid_chars

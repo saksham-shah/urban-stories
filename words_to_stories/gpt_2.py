@@ -435,7 +435,7 @@ def generate(sess,
              target=None):
     """Generates text from a model loaded into memory.
     (we added) If a target word is given as input the generated text will contain the target word
-    This fucntion contains the changes we made for our project.
+    This function contains the changes we made for our project.
      """
 
     truncating = not (target is None)
