@@ -31,6 +31,8 @@ The front-end has been designed using Flutter. It uses the above server to reque
 * `app.py`: main server file
 * `locations_to_words/__init__.py`: entry point for code that takes locations and returns keywords
 * `locations_to_words/extract_word.py`: takes locations and returns keywords
+* `locations_to_words/collect_words.py`: collect set of words from a big area, used to create word frequency dictionary.
+* `locations_to_words/London_words.pkl`: one of the word frequency dictionary, sampling words from London.
 * `words_to_stories/__init__.py`: entry point for code that takes keywords and generates stories
 * `words_to_stories/create_stories.py`: takes keywords and generates stories
 * `words_to_stories/download_model.py`: downloads the GPT2 model
