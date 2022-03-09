@@ -4,7 +4,7 @@ import pickle
 
 discarded_words = {"yes", "common", "general", "commercial", "retail", "station", "rental", "place", "of", "centre",
                    "venue", 'fast', "box", "paving", "stones"}
-word_file = "London_words.pkl"
+word_file = "locations_to_words\\London_words.pkl"
 
 
 def set_usage_by_coords(latitude, longitude, radius=0.001):
