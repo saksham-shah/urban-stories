@@ -1,6 +1,4 @@
-""" used to test the word insertion but not actually used in final app."""
-
-import gpt_2 as gpt2
+from . import gpt_2 as gpt2
 
 # Set model to use: 124M, 335M or 774M
 model_name = "124M"
