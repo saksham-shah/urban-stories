@@ -37,3 +37,5 @@ The front-end has been designed using Flutter. It uses the above server to reque
 * `words_to_stories/gpt_2.py`: adapted from gpt_2_simple
 * `words_to_stories/sample.py`: adapted from gpt_2_simple
 * `words_to_stories/gpt2_utilities.py`: utility functions to help in generating stories
+
+Other files in this repository were used for testing and debugging.
